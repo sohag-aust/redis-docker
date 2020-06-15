@@ -13,8 +13,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -43,6 +47,11 @@ public class AppController {
 
     @Autowired
     private AppService appService;
+
+    @Autowired
+    private RedisTemplate<Integer, Post> redisTemplate;
+
+    private HashOperations hashOperations;
 
     @PostMapping("/signup")
     public ResponseEntity register(@RequestBody RegistrationRequest registerRequest) {
@@ -69,14 +78,48 @@ public class AppController {
 
     @PostMapping("/post")
     public Post createPost(@RequestBody PostRequest postRequest){
-        return appService.createPost(postRequest);
+        //deleteAllEntries();
+
+        Post p = appService.createPost(postRequest);
+        return p;
     }
 
-    @Cacheable(value = "POST")
+    //@Cacheable(value = "POST")
     @GetMapping("/posts")
-    public List<Post> getAllPosts(){
-        System.out.println("DB Operation");
-        return appService.getAllPosts();
+    public Map<Integer, Post> getAllPosts(){
+
+        //List<Integer> l = appService.getLast();
+        //int lastRow = l.get(0);
+        int lastRow = appService.getLast();
+        System.out.println("last id: " + lastRow);
+
+        hashOperations = redisTemplate.opsForHash();
+
+        Map<Integer, Post> mp = hashOperations.entries("blog");
+        System.out.println("size of redis: " + mp.size());
+
+        if(mp.size() < lastRow){
+
+            System.out.println("Fetching Data from DB.....");
+            List<Post> list = appService.getAllPosts();
+
+            for(Integer i=mp.size();i<list.size();i++){
+            //for(Post myPost : list){
+                //hashOperations.delete("blog", myPost.getId());
+
+//                if(hashOperations.get("blog", myPost.getId()) == null){
+//                    hashOperations.put("blog", myPost.getId(), myPost);
+//                }
+
+                if(hashOperations.get("blog", i) == null){
+                    hashOperations.put("blog", i, list.get(i));
+                }
+
+                //hashOperations.put("blog", myPost.getId(), myPost);
+            }
+        }
+
+        return mp;
     }
 
     //@Cacheable(value = "POST", key = "#root.args[0]")
@@ -85,5 +128,11 @@ public class AppController {
         System.out.println("Value Received from id: " + id);
         return appService.getPostById(id);
     }
+
+//    @CacheEvict(value = "POST", allEntries = true)
+//    @DeleteMapping("/deleteAll")
+//    public void deleteAllEntries(){
+//        System.out.println("Deleted ALL Entries..");
+//    }
 
 }

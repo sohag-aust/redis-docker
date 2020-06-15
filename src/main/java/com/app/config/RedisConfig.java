@@ -1,5 +1,6 @@
 package com.app.config;
 
+import com.app.entity.Post;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,4 +25,10 @@ public class RedisConfig {
         return new JedisConnectionFactory(redisStandaloneConfiguration);
     }
 
+    @Bean
+    RedisTemplate<Integer, Post> redisTemplate() {
+        RedisTemplate<Integer, Post> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(jedisConnectionFactory());
+        return redisTemplate;
+    }
 }

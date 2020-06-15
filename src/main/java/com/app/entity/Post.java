@@ -14,6 +14,8 @@ import java.io.Serializable;
 @Setter
 @Getter
 @Table(name = "post")
+//@NamedQuery(name = "Post.getLastValue",
+//        query = "SELECT id FROM Post ORDER BY id DESC LIMIT 1")
 public class Post implements Serializable {
 
     @Id

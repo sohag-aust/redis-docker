@@ -74,4 +74,9 @@ public class AppService {
     public Post getPostById(Integer id) {
         return postRepository.findById(id).orElse(null);
     }
+
+
+    public Integer getLast(){
+        return postRepository.getLastValue();
+    }
 }
