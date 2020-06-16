@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -81,13 +82,13 @@ public class AppController {
         return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 
-    @PostMapping("/post")
+    @PostMapping(value = "/post", consumes = "application/json", produces = "application/json")
     public Post createPost(@RequestBody PostRequest postRequest){
         clearCache();
         return appService.createPost(postRequest);
     }
 
-    @GetMapping("/posts")
+    @GetMapping(value = "/posts", consumes = "application/json", produces = "application/json")
     public String getAllPosts() throws IOException {
 
         if(redisTemplate.opsForValue().get("blog") == null){
@@ -102,19 +103,19 @@ public class AppController {
         return redisTemplate.opsForValue().get("blog");
     }
 
-    @GetMapping("/post/{id}")
+    @GetMapping(value = "/post/{id}", consumes = "application/json", produces = "application/json")
     public Post getPostById(@PathVariable("id") Integer id){
         System.out.println("Value Received from id: " + id);
         return appService.getPostById(id);
     }
 
-    @PutMapping("/post/{id}")
+    @PutMapping(value = "/post/{id}", consumes = "application/json", produces = "application/json")
     public Post updatePostById(@RequestBody Post post, @PathVariable("id") Integer id){
         clearCache();
         return appService.updatePostById(post, id);
     }
 
-    @DeleteMapping("/post/{id}")
+    @DeleteMapping(value = "/post/{id}", consumes = "application/json", produces = "application/json")
     public void deletePostById(@PathVariable("id") Integer id){
         clearCache();
         appService.deletePostById(id);
