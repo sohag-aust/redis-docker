@@ -14,8 +14,8 @@ public interface PostRepository extends JpaRepository<Post, Integer>, CrudReposi
     //@Query(value = "SELECT id FROM Post p ORDER BY p.id DESC LIMIT 1", nativeQuery = true)
     //Integer getLastValue();
     //@Query(value = "SELECT id FROM Post p ORDER BY p.id DESC")
-    @Query(value = "SELECT count(*) FROM Post p")
-    Integer getLastValue();
+    //@Query(value = "SELECT count(*) FROM Post p")
+    //Integer getLastValue();
 
 
 }

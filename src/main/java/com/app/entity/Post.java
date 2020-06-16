@@ -28,4 +28,13 @@ public class Post implements Serializable {
 
     @Column(name="content")
     private String content;
+
+
+    @Override
+    public String toString() {
+        return "{ id=" + id +
+                ", title='" + title + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

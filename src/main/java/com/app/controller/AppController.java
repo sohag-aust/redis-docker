@@ -8,6 +8,9 @@ import com.app.response.AuthenticationResponse;
 import com.app.service.AppService;
 import com.app.service.MyUserDetailsService;
 import com.app.util.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,8 +29,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -49,9 +56,7 @@ public class AppController {
     private AppService appService;
 
     @Autowired
-    private RedisTemplate<Integer, Post> redisTemplate;
-
-    private HashOperations hashOperations;
+    private RedisTemplate<String, String> redisTemplate;
 
     @PostMapping("/signup")
     public ResponseEntity register(@RequestBody RegistrationRequest registerRequest) {
@@ -78,61 +83,45 @@ public class AppController {
 
     @PostMapping("/post")
     public Post createPost(@RequestBody PostRequest postRequest){
-        //deleteAllEntries();
-
-        Post p = appService.createPost(postRequest);
-        return p;
+        clearCache();
+        return appService.createPost(postRequest);
     }
 
-    //@Cacheable(value = "POST")
     @GetMapping("/posts")
-    public Map<Integer, Post> getAllPosts(){
+    public String getAllPosts() throws IOException {
 
-        //List<Integer> l = appService.getLast();
-        //int lastRow = l.get(0);
-        int lastRow = appService.getLast();
-        System.out.println("last id: " + lastRow);
-
-        hashOperations = redisTemplate.opsForHash();
-
-        Map<Integer, Post> mp = hashOperations.entries("blog");
-        System.out.println("size of redis: " + mp.size());
-
-        if(mp.size() < lastRow){
-
-            System.out.println("Fetching Data from DB.....");
+        if(redisTemplate.opsForValue().get("blog") == null){
+            System.out.println("Fetching data from DB...");
             List<Post> list = appService.getAllPosts();
 
-            for(Integer i=mp.size();i<list.size();i++){
-            //for(Post myPost : list){
-                //hashOperations.delete("blog", myPost.getId());
-
-//                if(hashOperations.get("blog", myPost.getId()) == null){
-//                    hashOperations.put("blog", myPost.getId(), myPost);
-//                }
-
-                if(hashOperations.get("blog", i) == null){
-                    hashOperations.put("blog", i, list.get(i));
-                }
-
-                //hashOperations.put("blog", myPost.getId(), myPost);
-            }
+            ObjectMapper mapper = new ObjectMapper();
+            String res = mapper.writeValueAsString(list);
+            redisTemplate.opsForValue().set("blog", res);
         }
 
-        return mp;
+        return redisTemplate.opsForValue().get("blog");
     }
 
-    //@Cacheable(value = "POST", key = "#root.args[0]")
     @GetMapping("/post/{id}")
     public Post getPostById(@PathVariable("id") Integer id){
         System.out.println("Value Received from id: " + id);
         return appService.getPostById(id);
     }
 
-//    @CacheEvict(value = "POST", allEntries = true)
-//    @DeleteMapping("/deleteAll")
-//    public void deleteAllEntries(){
-//        System.out.println("Deleted ALL Entries..");
-//    }
+    @PutMapping("/post/{id}")
+    public Post updatePostById(@RequestBody Post post, @PathVariable("id") Integer id){
+        clearCache();
+        return appService.updatePostById(post, id);
+    }
+
+    @DeleteMapping("/post/{id}")
+    public void deletePostById(@PathVariable("id") Integer id){
+        clearCache();
+        appService.deletePostById(id);
+    }
+
+    private void clearCache(){
+        redisTemplate.delete("blog");
+    }
 
 }

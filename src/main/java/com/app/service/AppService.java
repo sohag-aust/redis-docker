@@ -75,8 +75,16 @@ public class AppService {
         return postRepository.findById(id).orElse(null);
     }
 
+    public Post updatePostById(Post newPost, Integer postId) {
+        Post oldPost = postRepository.findById(postId) .orElse(null);
 
-    public Integer getLast(){
-        return postRepository.getLastValue();
+        oldPost.setTitle(newPost.getTitle());
+        oldPost.setContent(newPost.getContent());
+
+        return postRepository.save(oldPost);
+    }
+
+    public void deletePostById(Integer id) {
+        postRepository.deleteById(id);
     }
 }
