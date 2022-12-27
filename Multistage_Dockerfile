@@ -1,0 +1,23 @@
+#
+# Build stage
+#
+# MULTI_STAGE_DOCKER_FILE : https://levelup.gitconnected.com/docker-multi-stage-builds-and-copy-from-other-images-3bf1a2b095e0
+FROM maven:3.6.0-jdk-11-slim AS builder
+COPY src /home/app/src
+COPY pom.xml /home/app
+# mvn -f : force the use of an alternate POM file (or directory with pom.xml)
+RUN mvn -f /home/app/pom.xml clean package
+
+#
+# Package stage
+#
+FROM openjdk:11-jre-slim
+ARG PREVIOUS_IMAGE_JAR_FILE_LOCATION=/home/app/target/*.jar
+# copy jar_file from previous image (named as builder)
+COPY --from=builder ${PREVIOUS_IMAGE_JAR_FILE_LOCATION} /usr/local/lib/serviceregistry.jar
+EXPOSE 8070
+
+# ENTRYPOINT command will run inside the container, so inside the location: /usr/local/lib/  ,  serviceregistry.jar file will run using cmd: java -jar
+ENTRYPOINT ["java","-jar","/usr/local/lib/serviceregistry.jar"]
+
+# build image cmd : sudo docker build . -t service_registry_microservice:0.0.1 // tag=0.0.1
