@@ -21,3 +21,6 @@
 
 ### Enter inside a container:
     sudo docker exec -it <CONTAINER_ID> bash
+
+### start a container:
+    sudo docker start <CONTAINER_ID>
