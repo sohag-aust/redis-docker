@@ -24,3 +24,6 @@
 
 ### start a container:
     sudo docker start <CONTAINER_ID>
+    
+### Monitor logs of a container:
+    sudo docker logs <CONTAINER_ID>
