@@ -1,0 +1,16 @@
+version: '3'
+services:
+  serviceregistry:
+    image: 'service_registry_microservice:0.0.1'
+    container_name: 'service_registry_container'
+    ports:
+      - '8070:8070'
+  configserver:
+    image: 'config_server_microservice:0.0.1'
+    container_name: 'config_server_container'
+    ports:
+      - '8091:8091'
+    environment: 
+      - EUREKA_SERVER_ADDRESS=http://serviceregistry:8070/eureka
+    depends_on:
+      - serviceregistry

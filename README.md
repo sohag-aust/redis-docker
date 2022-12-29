@@ -1,7 +1,17 @@
 ### Application UP
     docker-compose up --build
+
+    here, --build is used to build the image first, if there are no images before
+
+### Application UP way:2 (microservice)
+    sudo docker-compose -f docker-compose.yml up -d
+
+    here, -f means the file name
+
 ### Application DOWN
     docker-compose down
+
+    firstly, it stops the container and after that it will remove those containers
 
 
 ### MULTI_STAGE_DOCKER_FILE
